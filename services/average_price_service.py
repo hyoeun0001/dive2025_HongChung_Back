@@ -14,10 +14,6 @@ def calculate_average_price(city: str, district: str, type_: str, price: float):
     
     average_price = price * matched["rate"] / 100
     return {
-        "city": city,
-        "district": district,
-        "type": type_,
         "rate": matched["rate"],
-        "price": price,
         "averagePrice": int(average_price)
     }
