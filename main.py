@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from api.quiz_api import router as quiz_router
 from api.average_price_api import router as average_price_router
 
