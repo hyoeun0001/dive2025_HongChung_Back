@@ -14,7 +14,7 @@ model = CatBoostClassifier()
 model.load_model(MODEL_PATH)
 
 # 데이터 로드 (전세가율 CSV)
-JEONSE_PATH = Path(__file__).parent.parent / "data" / "jeonse_rate.csv"
+JEONSE_PATH = Path(__file__).parent.parent / "data" / "dataset_Jeonse_rate.csv"
 try:
     jeonse_df = pd.read_csv(JEONSE_PATH)
 except FileNotFoundError:
@@ -66,41 +66,41 @@ def get_jeonse_rate(region: str, house_type: str):
     latest_col = jeonse_df.columns[-1]
     return row[latest_col].values[0]
     
-def predict_risk(data: RiskRequest):
-    houseType = map_housing_type(data.houseType)
+def predict_risk(
+    initialLTV,
+    housePrice,
+    depositAmount,
+    seniority,
+    region,
+    houseType,
+    guaranteeStartMonth,
+    guaranteeEndMonth
+):
+    # 기존 data.X → 각각 변수로 사용
+    loanAmount = initialLTV * housePrice
+    guaranteePeriodMonths = calculate_guarantee_period(guaranteeStartMonth, guaranteeEndMonth)
+    jeonseRateStartMonth = get_jeonse_rate(region, map_housing_type(houseType))
 
-    # 파생 변수 생성
-    loanAmount = data.initialLTV * data.housePrice
-    guaranteePeriodMonths = calculate_guarantee_period(
-        data.guaranteeStartMonth, data.guaranteeEndMonth
-    )
-    jeonseRateStartMonth = get_jeonse_rate(data.region, houseType, data.guaranteeStartMonth)
-
-    # 피처 순서 맞추기
     features = [
-        data.initialLTV,         # 0
-        data.housePrice,         # 1
-        data.depositAmount,      # 2
-        data.seniority,          # 3
-        data.region,             # 4 (카테고리형)
-        houseType,               # 5 (카테고리형)
-        data.guaranteeStartMonth,# 6
-        data.guaranteeEndMonth,  # 7
-        guaranteePeriodMonths,   # 8
-        jeonseRateStartMonth,    # 9
-        loanAmount               # 10
+        initialLTV,
+        housePrice,
+        depositAmount,
+        seniority,
+        region,
+        map_housing_type(houseType),
+        guaranteeStartMonth,
+        guaranteeEndMonth,
+        guaranteePeriodMonths,
+        jeonseRateStartMonth,
+        loanAmount
     ]
-
     features_array = np.array([features], dtype=object)
 
-    # 예측 수행
     try:
         prediction = model.predict(features_array)
-        probability = model.predict_proba(features_array)[:, 1]  # 위험 확률 (1 클래스)
+        probability = model.predict_proba(features_array)[:, 1]
+        print(jeonseRateStartMonth)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
-    return {
-        "prediction": float(prediction[0]),
-        "probability": float(probability[0])
-    }
+    return {"prediction": float(prediction[0]), "probability": float(probability[0])}
