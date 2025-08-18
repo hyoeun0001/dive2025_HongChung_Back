@@ -4,6 +4,6 @@ from controllers.average_price_controller import fetch_average_price
 
 router = APIRouter()
 
-@router.post("/calculate-price")
+@router.post("/average-deposit")
 def get_average_price(data: RateRequest):
     return fetch_average_price(data)
