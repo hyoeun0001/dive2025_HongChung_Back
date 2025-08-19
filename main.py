@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.quiz_api import router as quiz_router
 from api.average_price_api import router as average_price_router
+from api.risk_prediction_api import router as risk_prediction_router
 
 app = FastAPI()
 
@@ -21,6 +22,7 @@ app.add_middleware(
 
 app.include_router(quiz_router)
 app.include_router(average_price_router)
+app.include_router(risk_prediction_router)
 
 @app.get("/")
 def read_root():
