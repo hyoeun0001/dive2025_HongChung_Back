@@ -4,10 +4,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import math
+from catboost import Pool
 from utils.util import get_jeonse_rate, get_unsold_value, get_base_rate, map_housing_type, calculate_guarantee_period
 
 # 모델 로드
-MODEL_PATH = Path(__file__).parent.parent / "models" / "catboost_0819.cbm"
+MODEL_PATH = Path(__file__).parent.parent / "models" / "catboost_0820.cbm"
 model = CatBoostClassifier()
 model.load_model(MODEL_PATH)
 
@@ -65,32 +66,45 @@ def predict_risk(
     
     baseRate = get_base_rate(base_rate_df, guaranteeStartMonth)
 
-    features = [
-        initialLTV,
-        housePrice,
-        depositAmount,
-        seniority,
-        region,
-        map_housing_type(houseType),
-        guaranteeStartMonth,
-        guaranteeEndMonth,
-        guaranteePeriodMonths,
-        jeonseRateStartMonth,
-        baseRate,
-        unsoldValue,
-        loanAmount,
+    # ⚡ feature_order에 맞게 데이터 구성
+    features_dict = {
+        "초기LTV": initialLTV,
+        "주택가액": housePrice,
+        "임대보증금액": depositAmount,
+        "선순위": seniority,
+        "시도": region,  # 범주형
+        "주택구분": map_housing_type(houseType),  # 범주형
+        "보증기간_개월": guaranteePeriodMonths,
+        "보증시작월_전세가율": jeonseRateStartMonth,
+        "기준금리": baseRate,
+        "미분양주택수": unsoldValue,
+        "보증시작월_dt_연": int(str(guaranteeStartMonth)[:4]),
+        "보증시작월_dt_월": int(str(guaranteeStartMonth)[4:]),
+        "보증완료월_dt_연": int(str(guaranteeEndMonth)[:4]),
+        "보증완료월_dt_월": int(str(guaranteeEndMonth)[4:]),
+        "대출액": loanAmount,
+    }
+
+    # DataFrame으로 변환 (순서 보장)
+    feature_order = [
+        "초기LTV", "주택가액", "임대보증금액", "선순위",
+        "시도", "주택구분", "보증기간_개월", "보증시작월_전세가율",
+        "기준금리", "미분양주택수", "보증시작월_dt_연", "보증시작월_dt_월",
+        "보증완료월_dt_연", "보증완료월_dt_월", "대출액"
     ]
-    features_array = np.array([features], dtype=object)
-    
+    features_df = pd.DataFrame([[features_dict[col] for col in feature_order]], columns=feature_order)
+
+    # Pool 객체 생성 (categorical_features 지정)
+    categorical_features = ["시도", "주택구분"]
+    pool = Pool(features_df, cat_features=categorical_features)
+
     try:
-        prediction = model.predict(features_array)
-        probability = model.predict_proba(features_array)[:, 1]
-        print(jeonse_df["지역별(1)"].unique())
-        print(jeonse_df["주택유형별(1)"].unique())
-        print(jeonse_df.columns.tolist())
-        print(jeonseRateStartMonth)
+        prediction = model.predict(pool)
+        probability = model.predict_proba(pool)[:, 1] * 100
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
-    return {"prediction": float(prediction[0]), "probability": round(float(probability[0]), 2)}
-        
+    return {
+        "prediction": float(prediction[0]),
+        "probability": round(float(probability[0]), 2)
+    }
