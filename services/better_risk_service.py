@@ -138,9 +138,18 @@ def better_risk(
         best_prob = probs[best_idx]
 
         best_result = {
-            "주택가액": housePrice - round(new_df.iloc[best_idx]["주택가액"]),
-            "임대보증금액": depositAmount - round(new_df.iloc[best_idx]["임대보증금액"]),
-            "선순위": seniority - round(new_df.iloc[best_idx]["선순위"]),
+            "주택가액": {
+                "isUseful": round(new_df.iloc[best_idx]["주택가액"]) - housePrice != 0,
+		        "result": round(new_df.iloc[best_idx]["주택가액"]) - housePrice
+                },
+            "임대보증금액": {
+                "isUseful": (round(new_df.iloc[best_idx]["임대보증금액"])) - depositAmount != 0,
+		        "result": (round(new_df.iloc[best_idx]["임대보증금액"])) - depositAmount,
+                },
+            "선순위": {
+                "isUseful": round(new_df.iloc[best_idx]["선순위"]) - seniority != 0,
+		        "result": round(new_df.iloc[best_idx]["선순위"]) - seniority
+                },
             "probability": round(float(best_prob), 2)
         }
 
