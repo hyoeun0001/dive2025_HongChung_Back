@@ -142,15 +142,18 @@ def better_risk(
         best_result = {
             "주택가액": {
                 "isUseful": round(new_df.iloc[best_idx]["주택가액"]) - housePrice != 0,
-                "result": (round(new_df.iloc[best_idx]["주택가액"]) - housePrice) / housePrice * 100
+                "result": (round(new_df.iloc[best_idx]["주택가액"]) - housePrice) / housePrice * 100,
+                "newResult": round(new_df.iloc[best_idx]["주택가액"])
             },
             "임대보증금액": {
                 "isUseful": round(new_df.iloc[best_idx]["임대보증금액"]) - depositAmount != 0,
-                "result": (round(new_df.iloc[best_idx]["임대보증금액"]) - depositAmount) / depositAmount * 100
+                "result": (round(new_df.iloc[best_idx]["임대보증금액"]) - depositAmount) / depositAmount * 100,
+                "newResult": round(new_df.iloc[best_idx]["임대보증금액"])
             },
             "선순위": {
                 "isUseful": round(new_df.iloc[best_idx]["선순위"]) - seniority != 0,
-                "result": (round(new_df.iloc[best_idx]["선순위"]) - seniority) / seniority * 100
+                "result": (round(new_df.iloc[best_idx]["선순위"]) - seniority) / seniority * 100,
+                "newResult": round(new_df.iloc[best_idx]["선순위"])
             },
             "probability": round(float(best_prob), 2) *100,
             "isFound": False if best_prob >= probability else True
