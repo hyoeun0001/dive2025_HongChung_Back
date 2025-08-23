@@ -7,8 +7,6 @@ def map_housing_type(x: str) -> str:
     x = str(x).strip()
     if x in ["아파트", "주상복합", "오피스텔"]:
         return "아파트"
-    elif x in ["연립주택", "다세대주택", "다가구주택", "다중주택", "연립다세대"]:
-        return "연립다세대"
     elif x == "단독주택":
         return "단독주택"
     else:

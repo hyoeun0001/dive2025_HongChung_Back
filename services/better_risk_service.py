@@ -106,25 +106,29 @@ def better_risk(
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
     
     if prediction == 1.0:
-        adjustments = [0.9, 1.0, 1.1]
-
-        # 27개 조합 생성
+        adjustments = [0.8, 0.9, 1.0, 1.1, 1.2]  # 탐색 범위 확장
         combinations = list(itertools.product(adjustments, repeat=3))
-
-        # 모든 케이스를 DataFrame에 담기
         rows = []
         for hp_factor, deposit_factor, seniority_factor in combinations:
             new_housePrice = housePrice * hp_factor
             new_depositAmount = depositAmount * deposit_factor
             new_seniority = seniority * seniority_factor
 
+            if new_housePrice == 0:
+                continue  # division by zero 방지
+            new_initialLTV = (new_seniority + new_depositAmount) / new_housePrice
+            if new_initialLTV > 0.8:  # ⚡ LTV 제한 추가
+                continue
+            new_loanAmount = new_initialLTV * new_housePrice
+
             new_features = features_dict.copy()
             new_features.update({
                 "주택가액": new_housePrice,
                 "임대보증금액": new_depositAmount,
-                "선순위": new_seniority
+                "선순위": new_seniority,
+                "초기LTV": new_initialLTV,
+                "대출액": new_loanAmount
             })
-
             rows.append([new_features[col] for col in feature_order])
 
         new_df = pd.DataFrame(rows, columns=feature_order)
@@ -140,17 +144,18 @@ def better_risk(
         best_result = {
             "주택가액": {
                 "isUseful": round(new_df.iloc[best_idx]["주택가액"]) - housePrice != 0,
-		        "result": round(new_df.iloc[best_idx]["주택가액"]) - housePrice
-                },
+                "result": (round(new_df.iloc[best_idx]["주택가액"]) - housePrice) / housePrice * 100
+            },
             "임대보증금액": {
-                "isUseful": (round(new_df.iloc[best_idx]["임대보증금액"])) - depositAmount != 0,
-		        "result": (round(new_df.iloc[best_idx]["임대보증금액"])) - depositAmount,
-                },
+                "isUseful": round(new_df.iloc[best_idx]["임대보증금액"]) - depositAmount != 0,
+                "result": (round(new_df.iloc[best_idx]["임대보증금액"]) - depositAmount) / depositAmount * 100
+            },
             "선순위": {
                 "isUseful": round(new_df.iloc[best_idx]["선순위"]) - seniority != 0,
-		        "result": round(new_df.iloc[best_idx]["선순위"]) - seniority
-                },
-            "probability": round(float(best_prob), 2)
+                "result": (round(new_df.iloc[best_idx]["선순위"]) - seniority) / seniority * 100
+            },
+            "probability": round(float(best_prob), 2) *100,
+            "isFound": False if best_prob >= probability else True
         }
 
         return {
