@@ -155,7 +155,7 @@ def better_risk(
                 "result": (round(new_df.iloc[best_idx]["선순위"]) - seniority) / seniority * 100,
                 "newResult": round(new_df.iloc[best_idx]["선순위"])
             },
-            "probability": round(float(best_prob), 2) *100,
+            "probability": round(float(best_prob), 2) ,
             "isFound": False if best_prob >= probability else True
         }
 
