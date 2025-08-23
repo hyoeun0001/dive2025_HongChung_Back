@@ -7,7 +7,7 @@ from catboost import Pool
 from utils.util import get_jeonse_rate, get_unsold_value, get_base_rate, map_housing_type, calculate_guarantee_period
 
 # 모델 로드
-MODEL_PATH = Path(__file__).parent.parent / "models" / "catboost_0820.cbm"
+MODEL_PATH = Path(__file__).parent.parent / "models" / "catboost_0822.cbm"
 model = CatBoostClassifier()
 model.load_model(MODEL_PATH)
 
