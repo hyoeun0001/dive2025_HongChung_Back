@@ -117,8 +117,6 @@ def better_risk(
             if new_housePrice == 0:
                 continue  # division by zero 방지
             new_initialLTV = (new_seniority + new_depositAmount) / new_housePrice
-            if new_initialLTV > 0.8:  # ⚡ LTV 제한 추가
-                continue
             new_loanAmount = new_initialLTV * new_housePrice
 
             new_features = features_dict.copy()
