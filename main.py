@@ -4,6 +4,7 @@ from api.quiz_api import router as quiz_router
 from api.average_price_api import router as average_price_router
 from api.risk_prediction_api import router as risk_prediction_router
 from api.better_risk_api import router as better_risk_router
+from api.audio_api import router as audio_router
 
 app = FastAPI()
 
@@ -25,6 +26,7 @@ app.include_router(quiz_router)
 app.include_router(average_price_router)
 app.include_router(risk_prediction_router)
 app.include_router(better_risk_router)
+app.include_router(audio_router)
 
 @app.get("/")
 def read_root():
